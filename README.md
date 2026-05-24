@@ -86,7 +86,7 @@ orchestration.
 
 # System Architecture
 
-![Automated-HR-AI-System-Graph](/Automated-HR-AI-System-Graph.jpg)
+![Automated-HR-AI-System-Graph](/Automated-HR-AI-System-Graph.svg)
 
 ---
 
