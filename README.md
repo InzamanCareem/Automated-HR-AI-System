@@ -86,7 +86,7 @@ orchestration.
 
 # System Architecture
 
-![Automated-HR-AI-System-Graph](/Automated-HR-AI-System-Graph.svg)
+![Automated-HR-AI-System-Graph](https://github.com/InzamanCareem/Automated-HR-AI-System/blob/283014f30f9610b2f9b4a846e2664072f3f15933/Automated-HR-AI-System-Graph.svg)
 
 ---
 
