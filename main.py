@@ -106,3 +106,25 @@ def compliance_agent(state: State):
     reply = llm.invoke(messages)
 
     return {"messages": AIMessage(content=reply.content)}
+
+
+def clarification_agent(state: State):
+    last_message = state["messages"][-1]
+
+    messages = [
+        SystemMessage(
+            content="""
+                You are a Clarification Assistant. Your role is to identify missing, unclear, or ambiguous information in the user's request and ask precise follow-up questions to fully understand their needs.
+                Communicate clearly, politely, and concisely while guiding the user toward providing complete and accurate information.
+                Focus on eliminating confusion, confirming details, and ensuring requirements are properly understood before proceeding.
+                Ask one or more relevant clarification questions when information is incomplete, inconsistent, or open to interpretation.
+                Avoid making assumptions or providing final answers until the necessary details are confirmed.
+                Prioritize accuracy, context understanding, and effective communication.
+            """
+        ),
+        HumanMessage(content=last_message.content)
+    ]
+
+    reply = llm.invoke(messages)
+
+    return {"messages": AIMessage(content=reply.content)}
