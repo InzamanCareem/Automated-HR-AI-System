@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from typing import Annotated, Literal, Optional, List, TypedDict
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
+from langgraph.checkpoint.memory import InMemorySaver
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain.chat_models import init_chat_model
 from pydantic import BaseModel, Field
@@ -10,18 +11,20 @@ load_dotenv()
 
 llm = init_chat_model(model="google_genai:gemini-2.5-flash")
 
+checkpointer = InMemorySaver()
+
 
 class MessageClassifier(BaseModel):
     message_type: Literal["scheduling", "leave", "compliance", "clarification"] = Field(...,
-                                                                                        description="Classify if the message requires a scheduling, leaving, compliance or clarification response")
+                                                                                        description="Classify if the message requires a scheduling, leaving, compliance or clarification response (support)")
 
 
 class State(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
-    message_type: Optional[str]
+    next: Optional[str]
 
 
-def classifier(state: State):
+def classifier_agent(state: State):
     last_message = state["messages"][-1]
 
     classifier_llm = llm.with_structured_output(MessageClassifier)
@@ -38,7 +41,7 @@ def classifier(state: State):
         HumanMessage(content=last_message.content)
     ])
 
-    return {"message_type": result.message_type}
+    return {"next": result.message_type}
 
 
 def scheduling_agent(state: State):
@@ -128,3 +131,44 @@ def clarification_agent(state: State):
     reply = llm.invoke(messages)
 
     return {"messages": AIMessage(content=reply.content)}
+
+
+graph_builder = StateGraph(State)
+
+graph_builder.add_node("classifier", classifier_agent)
+graph_builder.add_node("scheduling", scheduling_agent)
+graph_builder.add_node("leave", leave_agent)
+graph_builder.add_node("compliance", compliance_agent)
+graph_builder.add_node("clarification", clarification_agent)
+
+graph_builder.add_edge(START, "classifier")
+graph_builder.add_conditional_edges("classifier", lambda state: state.get("next"), {
+    "scheduling": "scheduling",
+    "leave": "leave",
+    "compliance": "compliance",
+    "clarification": "clarification"
+})
+
+graph_builder.add_edge("scheduling", END)
+graph_builder.add_edge("leave", END)
+graph_builder.add_edge("compliance", END)
+graph_builder.add_edge("clarification", END)
+
+app = graph_builder.compile(checkpointer=checkpointer)
+
+
+def run_conversation(user_message: str):
+    config = {"configurable": {"thread_id": "demo_session_001"}}
+
+    print(f"User message: {user_message}")
+    response = app.invoke({"messages": HumanMessage(content=user_message)}, config=config)
+    ai_response = response["messages"][-1].content.strip()
+    print(f"AI response: {ai_response}\n\n")
+
+
+if __name__ == "__main__":
+    run_conversation("How do I apply for leave?")
+    run_conversation("Can I reschedule my interview?")
+    run_conversation("What is the company’s work-from-home policy?")
+    run_conversation("How many leave days do I have remaining?")
+    run_conversation("Who should I contact for payroll issues?")
