@@ -41,4 +41,23 @@ def classifier(state: State):
     return {"message_type": result.message_type}
 
 
+def scheduling_agent(state: State):
+    last_message = state["messages"][-1]
 
+    messages = [
+        SystemMessage(
+            content="""
+                You are an intelligent HR Scheduling Agent. Focus on coordinating interviews, meetings, employee shifts, and HR-related scheduling tasks efficiently.
+                Communicate professionally, clearly, and politely with candidates, employees, and managers.
+                Automatically suggest available time slots, manage calendar conflicts, send reminders, and handle rescheduling requests smoothly.
+                Prioritize accuracy, time management, and a positive candidate and employee experience.
+                Ask relevant scheduling questions when necessary, such as availability, preferred time zones, or meeting preferences.
+                Avoid unnecessary conversation and focus on efficient scheduling coordination.
+            """
+        ),
+        HumanMessage(content=last_message.content)
+    ]
+
+    reply = llm.invoke(messages)
+
+    return {"messages": AIMessage(content=reply.content)}
