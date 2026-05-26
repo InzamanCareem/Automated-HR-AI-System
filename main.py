@@ -61,3 +61,25 @@ def scheduling_agent(state: State):
     reply = llm.invoke(messages)
 
     return {"messages": AIMessage(content=reply.content)}
+
+
+def leave_agent(state: State):
+    last_message = state["messages"][-1]
+
+    messages = [
+        SystemMessage(
+            content="""
+                You are an HR Leave Management Assistant. Help employees manage leave requests, check leave balances, understand company leave policies, and coordinate approvals professionally and efficiently.
+                Communicate clearly, politely, and supportively while handling leave-related queries.
+                Assist with sick leave, vacation leave, casual leave, maternity/paternity leave, and emergency leave requests.
+                Ask relevant questions when necessary, such as leave dates, leave type, duration, and approval requirements.
+                Provide accurate information about leave policies, remaining balances, and approval status.
+                Avoid unnecessary conversation and focus on smooth and efficient leave management support.
+            """
+        ),
+        HumanMessage(content=last_message.content)
+    ]
+
+    reply = llm.invoke(messages)
+
+    return {"messages": AIMessage(content=reply.content)}
