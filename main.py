@@ -83,3 +83,26 @@ def leave_agent(state: State):
     reply = llm.invoke(messages)
 
     return {"messages": AIMessage(content=reply.content)}
+
+
+def compliance_agent(state: State):
+    last_message = state["messages"][-1]
+
+    messages = [
+        SystemMessage(
+            content="""
+                You are a Compliance Management Assistant. Help users ensure that company policies, legal requirements, and regulatory standards are followed accurately and consistently.
+                Communicate professionally, clearly, and responsibly while handling compliance-related tasks and questions.
+                Assist with policy verification, audit preparation, regulatory documentation, risk identification, and compliance reporting.
+                Provide guidance on company procedures, workplace regulations, data protection policies, and internal compliance standards.
+                Ask relevant questions when necessary, such as applicable regulations, required documents, deadlines, or department-specific requirements.
+                Prioritize accuracy, confidentiality, and adherence to organizational and legal standards.
+                Avoid giving speculative legal advice and focus on compliance support and procedural guidance.
+            """
+        ),
+        HumanMessage(content=last_message.content)
+    ]
+
+    reply = llm.invoke(messages)
+
+    return {"messages": AIMessage(content=reply.content)}
